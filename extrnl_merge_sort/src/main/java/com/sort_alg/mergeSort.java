@@ -10,36 +10,64 @@ public class mergeSort {
     private  int keyIndex ;
     private String FileName;
     private String FileNameOut;
+    private String currDir = System.getProperty("user.dir");
+    private Boolean isTest = false;
 
-    mergeSort(int maxMem,int poolSize, int keyIndexInput, String FileNameInput){
-        MAX_MEMORY = maxMem;
-        pool = Executors.newFixedThreadPool(poolSize);
-        keyIndex = keyIndexInput;
-        FileName = FileNameInput;
-        FileNameOut = "sorted"+FileNameInput;
+    public mergeSort(int maxMem,int poolSize, int keyIndexInput, String FileNameInput, String dir, Boolean... isTest ){
+        this.MAX_MEMORY = maxMem;
+        if(Runtime.getRuntime().availableProcessors()>=poolSize){
+            this.pool = Executors.newFixedThreadPool(poolSize);
+        } else{
+            System.err.println("the pool size is bigger than the number of available runtime processors so the number of threads will be 1");
+            this.pool = Executors.newFixedThreadPool(1);
+        }
+        this.keyIndex = keyIndexInput;
+        this.FileName = dir+"/"+FileNameInput;
+        this.FileNameOut = dir+"/"+"sorted_"+FileNameInput;
+        this.currDir = dir;
+        if (isTest.length>0){
+            this.isTest = isTest[0];
+        }
+        
     }
-    
+ 
+    public mergeSort(int maxMem,int poolSize, int keyIndexInput, String FileNameInput, Boolean... isTest){
+        this.MAX_MEMORY = maxMem;
+        if(Runtime.getRuntime().availableProcessors()>=poolSize){
+            this.pool = Executors.newFixedThreadPool(poolSize);
+        } else{
+            System.err.println("the pool size is bigger than the number of available runtime processors so the number of threads will be 1");
+            this.pool = Executors.newFixedThreadPool(1);
+        }
+        this.keyIndex = keyIndexInput;
+        this.FileName = "/"+FileNameInput;
+        this.FileNameOut = "sorted_"+FileNameInput;
+        if (isTest.length>0){
+            this.isTest = isTest[0];
+        }        
+    }
 
 
-    // public  void sortCSV(String inputFile, String outputFile) throws IOException {
     public  void sortCSV() throws IOException {
         List<File> runs = splitCSV(FileName); 
         List<BufferedReader> results;
         
         try {
-            results = readRunsParallel(runs);
+            results = readRuns(runs);
             
             BufferedWriter writer = new BufferedWriter(new FileWriter(FileNameOut));
             mergeRuns(results, writer);
             writer.close();
 
         } finally { 
-            cleanup(runs);
+            if( !isTest){
+                cleanup(runs);
+            }
             pool.shutdown();
         }
     }
 
-    
+    // creating a list of csv files with at most x lines
     private  List<File> splitCSV(String inputFile) throws IOException {
         
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
@@ -48,13 +76,19 @@ public class mergeSort {
         List<File> runs = new ArrayList<>();
         List<String> lines = new ArrayList<>();
         
+        String tempFileFolderName = currDir+"/TempFilesDir";
+        File tempFileFolder = new File(tempFileFolderName); 
+        if (!tempFileFolder.exists()){
+            tempFileFolder.mkdirs();
+        }
+        
         String line = reader.readLine();
         while (line != null) {
             
             lines.add(line);
             
-            if (getSize(lines) >= MAX_MEMORY) {
-                File file = writeRun(lines, header); 
+            if (lines.size() >= MAX_MEMORY) {
+                File file = writeRun(lines, header, tempFileFolder); 
                 runs.add(file);
                 lines.clear();
             }
@@ -63,35 +97,16 @@ public class mergeSort {
         }
         
         if (!lines.isEmpty()) {
-            File file = writeRun(lines, header);
+            File file = writeRun(lines, header, tempFileFolder);
             runs.add(file);
         }
         reader.close();
         return runs;
     }
     
-    private  int getSize(List<String> run) {
-        int size = 0;
-        for(String line : run) {
-            size += line.length();
-        }
-        return size;
-    }
-
-    private  List<BufferedReader> readRunsParallel(List<File> runs) throws IOException {
-    
-        List<BufferedReader> results = new ArrayList<>();
-        for(File file : runs) {
-            try {
-                results.add(new BufferedReader((new FileReader(file))));
-            } catch(FileNotFoundException e) {}
-        }
-        return results;
-    }
-
-
-    private  File writeRun(List<String> lines, String header) throws IOException {
-        File file = File.createTempFile("run", ".csv"); 
+    // creating a CSV file with the lines given to it at the specified temp file folder
+    private  File writeRun(List<String> lines, String header, File tempFileFolder) throws IOException {
+        File file = File.createTempFile("run", ".csv",tempFileFolder); 
         
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
         writer.write(header);
@@ -108,8 +123,20 @@ public class mergeSort {
     
 
 
+    // reding the files currently not parallelly
+    private  List<BufferedReader> readRuns(List<File> runs) throws IOException {
+    
+        List<BufferedReader> results = new ArrayList<>();
+        for(File file : runs) {
+            try {
+                results.add(new BufferedReader((new FileReader(file))));
+            } catch(FileNotFoundException e) {}
+        }
+        return results;
+    }
 
 
+    // reading the files and sorting them while merge
     private  void mergeRuns(List<BufferedReader> readers, Writer writer) throws IOException {
 
         PriorityQueue<CSVEntry> minHeap = new PriorityQueue<>(readers.size());

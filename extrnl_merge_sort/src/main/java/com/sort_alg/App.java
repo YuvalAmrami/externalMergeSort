@@ -1,5 +1,7 @@
 package com.sort_alg;
 
+import java.io.IOException;
+
 /**
  * Hello world!
  *
@@ -12,6 +14,7 @@ public class App
         int sizeOfMemory = 2;
         int numberOfThreads = 1;
         String nameOfCSVFile = "a.csv";
+        Boolean isTest = false;
 
         for(int i = 0; i<(args.length-1);i++){
             String arg = args[i];
@@ -21,14 +24,19 @@ public class App
                         keyVal = Integer.valueOf(args[i+1]);
                     case "-x":
                         sizeOfMemory = Integer.valueOf(args[i+1]);
-                    case "-t":
+                    case "-p":
                         numberOfThreads = Integer.valueOf(args[i+1]);
                     case "-f":
-                    nameOfCSVFile = args[i+1];
+                        nameOfCSVFile = args[i+1];
+                    case "-t":
+                        isTest = true;
                 }
 
             }
-        } 
+        }
+        if (args[args.length-1].toLowerCase()=="-t"){
+            isTest = true;
+        }
 
         System.out.println( "Hello World!" );
         System.out.print( "keyVal: "+keyVal );
@@ -36,6 +44,13 @@ public class App
         System.out.print( "numberOfThreads: "+numberOfThreads );
         System.out.print( "nameOfCSVFile: "+nameOfCSVFile );
 
-        System.out.println( "Hello World!" );
+        mergeSort mergeSort =new mergeSort(sizeOfMemory, numberOfThreads, keyVal, nameOfCSVFile,isTest);
+        try {
+            mergeSort.sortCSV();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
     }
 }
