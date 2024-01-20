@@ -24,11 +24,11 @@ public class App
                         keyVal = Integer.valueOf(args[i+1]);
                     case "-x":
                         sizeOfMemory = Integer.valueOf(args[i+1]);
-                    case "-p":
+                    case "-t":
                         numberOfThreads = Integer.valueOf(args[i+1]);
                     case "-f":
                         nameOfCSVFile = args[i+1];
-                    case "-t":
+                    case "-d":
                         isTest = true;
                 }
 
@@ -44,11 +44,10 @@ public class App
         System.out.print( "numberOfThreads: "+numberOfThreads );
         System.out.print( "nameOfCSVFile: "+nameOfCSVFile );
 
-        mergeSort mergeSort =new mergeSort(sizeOfMemory, numberOfThreads, keyVal, nameOfCSVFile,isTest);
+        MergeSort mergeSort =new MergeSort(sizeOfMemory, numberOfThreads, keyVal, nameOfCSVFile,isTest);
         try {
             mergeSort.sortCSV();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 

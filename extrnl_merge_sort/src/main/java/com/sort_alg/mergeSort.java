@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class mergeSort {
+public class MergeSort {
 
     // class variables
     private int MAX_MEMORY;
@@ -22,7 +22,7 @@ public class mergeSort {
 
 
     //constructors and initializers
-    public mergeSort(int maxMem, int poolSize, int keyIndexInput, String FileNameInput, String dir, Boolean... isTest) {
+    public MergeSort(int maxMem, int poolSize, int keyIndexInput, String FileNameInput, String dir, Boolean... isTest) {
         
         this.MAX_MEMORY = maxMem;
         if (Runtime.getRuntime().availableProcessors() >= poolSize) {
@@ -43,12 +43,14 @@ public class mergeSort {
         String tempFileFolderName = currDir + "/TempFilesDir";
         tempFileFolder = new File(tempFileFolderName);
         if (!tempFileFolder.exists()) {
-            tempFileFolder.mkdirs();
+            if (!tempFileFolder.mkdirs()) {
+                System.err.println("Error creating directories for " + (tempFileFolder).toString());
+            }
         }
         Uid = 1;
     }
 
-    public mergeSort(int maxMem, int poolSize, int keyIndexInput, String FileNameInput, Boolean... isTest) {
+    public MergeSort(int maxMem, int poolSize, int keyIndexInput, String FileNameInput, Boolean... isTest) {
         
         this.MAX_MEMORY = maxMem;
         if (Runtime.getRuntime().availableProcessors() >= poolSize) {
@@ -68,7 +70,9 @@ public class mergeSort {
         String tempFileFolderName = currDir + "/TempFilesDir";
         tempFileFolder = new File(tempFileFolderName);
         if (!tempFileFolder.exists()) {
-            tempFileFolder.mkdirs();
+            if (!tempFileFolder.mkdirs()) {
+                System.err.println("Error creating directories for " + (tempFileFolder).toString());
+            }
         }
         Uid = 1;
     }
@@ -145,6 +149,8 @@ public class mergeSort {
         try (BufferedReader reader = new BufferedReader(new FileReader(run))) {
             String line;
             while ((line = reader.readLine()) != null) {
+                if (header!=null && line.equals(header))
+                    continue;
                 String[] parts = line.split(",");
                 int key = Integer.parseInt(parts[keyIndex]);
                 chunk.add(new CSVEntry(key, line, null));
@@ -160,17 +166,24 @@ public class mergeSort {
         String uid = getUid();
         File file = File.createTempFile("run_" + uid, ".csv", tempFileFolder);
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-        writer.write(header);
-        writer.newLine();
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            if(header!=null){
+                writer.write(header);
+                writer.newLine();
+            }
 
-        for (String line : lines) {
-            writer.write(line);
-            writer.newLine();
+            for (String line : lines) {
+                writer.write(line);
+                writer.newLine();
+            }
+            writer.close();
+
+            return file;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        writer.close();
-
-        return file;
+        return null;
     }
 
     // running through the ordered files generated and being generated and merging
@@ -207,6 +220,9 @@ public class mergeSort {
 
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
+            } catch (InterruptedException ie) {
+                System.err.println("Thread interrupted. "+ ie);
+                throw new InterruptedException(ie.getMessage());
             }
         } else {
             mergeRuns(runs);
@@ -222,7 +238,7 @@ public class mergeSort {
             for (File run : runs) {
                 BufferedReader reader = new BufferedReader(new FileReader(run));
                 String line = reader.readLine();
-                if (line == header) {
+                if (header!=null && line.equals(header)) {
                     line = reader.readLine();
                 }
                 if (line != null) {
@@ -250,7 +266,7 @@ public class mergeSort {
             for (File run : runs) {
                 BufferedReader reader = new BufferedReader(new FileReader(run));
                 String line = reader.readLine();
-                if (line == header) {
+                if (header!=null && line.equals(header)) {
                     line = reader.readLine();
                 }
                 if (line != null) {
@@ -285,9 +301,10 @@ public class mergeSort {
             fileOut = File.createTempFile("run_" + uid, ".csv", tempFileFolder);
         }
         BufferedWriter writer = new BufferedWriter(new FileWriter(fileOut));
-        writer.write(header);
-        writer.newLine();
-
+        if (header != null){
+            writer.write(header);
+            writer.newLine();
+        }
         while (!minHeap.isEmpty()) {
             CSVEntry entry = minHeap.poll();
 
