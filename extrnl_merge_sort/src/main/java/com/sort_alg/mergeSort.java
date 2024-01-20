@@ -204,7 +204,7 @@ public class MergeSort {
                 for (final List<File> runBatch : runBatches) {
                     final Callable<File> mergeTask = new Callable<File>() {
                         public File call() throws Exception {
-                            return mergeRunsOneThread(runBatch);
+                            return mergeRunsOneThread(runBatch, false);
                         }
                     };
                     mergeFutures.add(pool.submit(mergeTask));
@@ -225,13 +225,13 @@ public class MergeSort {
                 throw new InterruptedException(ie.getMessage());
             }
         } else {
-            mergeRuns(runs);
+            mergeRunsOneThread(runs,true);
         }
     }
 
 
     // merging for a single thread: max runs are MAX_MEMORY
-    private File mergeRunsOneThread(List<File> runs) throws IOException {
+    private File mergeRunsOneThread(List<File> runs, Boolean isLast) throws IOException {
         PriorityQueue<CSVEntry> minHeap = new PriorityQueue<>();
 
         try {
@@ -247,7 +247,7 @@ public class MergeSort {
                     minHeap.add(new CSVEntry(key, line, reader));
                 }
             }
-            File merged = mergeMinHeap(minHeap);
+            File merged = mergeMinHeap(minHeap,isLast);
             cleanup(runs);
             return merged;
 
@@ -257,44 +257,11 @@ public class MergeSort {
 
     }
 
-    // running through the ordered files generated and being generated and merging
-    // them a new file ordered
-    private void mergeRuns(List<File> runs) throws IOException {
-        PriorityQueue<CSVEntry> minHeap = new PriorityQueue<>();
-
-        try {
-            for (File run : runs) {
-                BufferedReader reader = new BufferedReader(new FileReader(run));
-                String line = reader.readLine();
-                if (header!=null && line.equals(header)) {
-                    line = reader.readLine();
-                }
-                if (line != null) {
-                    String[] parts = line.split(",");
-                    int key = Integer.parseInt(parts[keyIndex]);
-                    minHeap.add(new CSVEntry(key, line, reader));
-                }
-
-                if (minHeap.size() == MAX_MEMORY) {
-                    File tempChunkFile = mergeMinHeap(minHeap);
-                    runs.add(tempChunkFile);
-                }
-            }
-
-            mergeMinHeap(minHeap, true);
-            cleanup(runs);
-
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-
-    }
-
     
     // merging the files from a minimum Heap of at most MAX_MEMORY entries at a time
-    private File mergeMinHeap(PriorityQueue<CSVEntry> minHeap, Boolean... isFinelFile) throws IOException {
+    private File mergeMinHeap(PriorityQueue<CSVEntry> minHeap, Boolean isFinelFile) throws IOException {
         File fileOut;
-        if (isFinelFile != null && isFinelFile[0] == true) {
+        if (isFinelFile == true) {
             fileOut = File.createTempFile(FileNameOut, ".csv");
         } else {
             String uid = getUid();
@@ -316,6 +283,8 @@ public class MergeSort {
                 String[] parts = nextLine.split(",");
                 int key = Integer.parseInt(parts[0]);
                 minHeap.add(new CSVEntry(key, nextLine, entry.reader));
+            }else{
+                entry.reader.close();
             }
 
         }
