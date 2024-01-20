@@ -26,34 +26,36 @@ public class App
                     case "-k":  //key
                         keyVal = Integer.valueOf(args[i+1]);
                         System.out.println( "input key value is: "+ keyVal );
-
+                        break;
                     case "-x":  //x lines active
                         sizeOfMemory = Integer.valueOf(args[i+1]);
                         System.out.println( "input max number of lines is: "+ sizeOfMemory);
-
+                        break;
                     case "-t":  //thread number
                         numberOfThreads = Integer.valueOf(args[i+1]);
                         System.out.println( "input number of threads: "+ numberOfThreads);
-
+                        break;
                     case "-f":  //file name
                         nameOfCSVFile = args[i+1];
                         System.out.println( "input name of CSV file: "+nameOfCSVFile);
-
+                        break;
                     case "-p":  //path
                         resourceDirectory = args[i+1];
-                        System.out.println( "input key value is: "+ keyVal);
-
+                        System.out.println( "input dir: "+ resourceDirectory);
+                        break;
                     case "-d":  //debug?
                         isTest = true;
-                        System.out.println( "input key value is: "+ keyVal);
+                        System.out.println( "the app is working on debug mode and will not delete the temporary files");
+                        break;
 
 
                 }
 
             }
         }
-        if (args.length>0 && args[args.length-1].toLowerCase()=="-d"){
+        if (args.length!=0 && args[args.length-1].toLowerCase().equals("-d")){
             isTest = true;
+            System.out.println( "the app is working on debug mode and will not delete the temporary files");
         }
 
         MergeSort mergeSort = new MergeSort(sizeOfMemory, numberOfThreads, keyVal, nameOfCSVFile, resourceDirectory.toString(),isTest);

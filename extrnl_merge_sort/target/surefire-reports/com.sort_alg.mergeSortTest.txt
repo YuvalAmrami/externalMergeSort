@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.sort_alg.mergeSortTest
 -------------------------------------------------------------------------------
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.809 s -- in com.sort_alg.mergeSortTest
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.788 s -- in com.sort_alg.mergeSortTest
