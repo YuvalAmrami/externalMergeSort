@@ -9,12 +9,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
-import java.util.concurrent.Callable;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,18 +36,19 @@ public class mergeSortTest {
 
         Method splitCSV = MergeSort.class.getDeclaredMethod("splitCSV", String.class);
         splitCSV.setAccessible(true);
-        Method cleanup = MergeSort.class.getDeclaredMethod("cleanup",List.class);
-        cleanup.setAccessible(true);
 
         // Call the splitCSV function, passing in your sample file
         Object invoke = splitCSV.invoke(mergeSort, resourceDirectory + "/sample1.csv");
         List<File> runs = (List<File>) invoke;
+    
 
         // Assert that it returned the expected number of runs
         assertEquals(1, runs.size());
 
         // Open the run file and check it contains the expected rows
         File runFile = runs.get(0);
+        runFile.deleteOnExit();
+
         BufferedReader reader = new BufferedReader(new FileReader(runFile));
 
         String line = reader.readLine(); // header
@@ -59,7 +61,6 @@ public class mergeSortTest {
         assertEquals("row2col1,row2col2,row2col3", line);
 
         reader.close();
-        cleanup.invoke(mergeSort, runs);
 
     }
 
@@ -71,12 +72,14 @@ public class mergeSortTest {
 
         Method splitCSV = MergeSort.class.getDeclaredMethod("splitCSV", String.class);
         splitCSV.setAccessible(true);
-        Method cleanup = MergeSort.class.getDeclaredMethod("cleanup",List.class);
-        cleanup.setAccessible(true);
 
 
         // Call the splitCSV function, passing in your sample file
         List<File> runs = (List<File>) splitCSV.invoke(mergeSort, resourceDirectory + "/sample2.csv");
+
+        for( File run : runs){
+            run.deleteOnExit();
+        }
 
         // Assert that it returned the expected number of runs
         assertEquals(3, runs.size());
@@ -109,27 +112,30 @@ public class mergeSortTest {
         assertEquals("row6col1,row6col2,row6col3", line);
 
         reader.close();
-        cleanup.invoke(mergeSort, runs);
 
+        for( File run : runs){
+            run.delete();
+        }
         
     }
 
     @Test
-    public void readRunAndSortTest() throws NoSuchMethodException, SecurityException, IllegalAccessException, InvocationTargetException {
+    public void testReadRunAndSort() throws NoSuchMethodException, SecurityException, IllegalAccessException, InvocationTargetException {
         MergeSort mergeSort = new MergeSort(10, 2, 0, "sample3.csv",resourceDirectory.toString());
 
         // methods:
         Method splitCSV = MergeSort.class.getDeclaredMethod("splitCSV", String.class);
         Method readRun = MergeSort.class.getDeclaredMethod("readRun", File.class);
-        Method cleanup = MergeSort.class.getDeclaredMethod("cleanup",List.class);
 
         splitCSV.setAccessible(true);
         readRun.setAccessible(true);
-        cleanup.setAccessible(true);
 
 
         // Call the splitCSV function, passing in your sample file
         List<File> runs = (List<File>) splitCSV.invoke(mergeSort, resourceDirectory + "/sample3.csv");
+        for( File run : runs){
+            run.deleteOnExit();
+        }
 
         assertEquals(1, runs.size());
 
@@ -161,12 +167,14 @@ public class mergeSortTest {
         assertEquals(CSVRun.get(5).line, new CSVEntry(7, "7,row4col2,row4col3", null).line);
 
 
-        cleanup.invoke(mergeSort, runs);
+        for( File run : runs){
+            run.delete();
+        }
 
     }
   
     @Test
-    public void writeRunTest() throws NoSuchMethodException, SecurityException, IllegalAccessException, InvocationTargetException, IOException {
+    public void testWriteRun() throws NoSuchMethodException, SecurityException, IllegalAccessException, InvocationTargetException, IOException {
         MergeSort mergeSort = new MergeSort(10, 2, 0, "sample1.csv",resourceDirectory.toString());
 
         // methods:
@@ -214,7 +222,6 @@ public class mergeSortTest {
 
         // keeping in mind the rounds themselves were not ordered yet sample4 is designed to be in ordered
         List<File> runs = (List<File>) splitCSV.invoke(mergeSort, resourceDirectory + "/sample4.csv");
-        List<String> FileNames = new ArrayList<>();
 
         PriorityQueue<CSVEntry> minHeap = new PriorityQueue<>();
 
@@ -257,22 +264,148 @@ public class mergeSortTest {
         
     }
 
+    @Test
+    public void testMergeRunsOneThread() throws NoSuchMethodException, SecurityException, IllegalAccessException, InvocationTargetException, IOException{
+        MergeSort mergeSort = new MergeSort(2, 2, 0, "sample4.csv",resourceDirectory.toString());
 
-    // mergeRunsParallel
+        String header = "header1,header2,header3";
 
-    // mergeRunsOneThread /last & no last
+        // methods:
+        Method splitCSV = MergeSort.class.getDeclaredMethod("splitCSV", String.class);
+        splitCSV.setAccessible(true);
+        Method mergeRunsOneThread = MergeSort.class.getDeclaredMethod("mergeRunsOneThread", List.class,Boolean.class);
+        mergeRunsOneThread.setAccessible(true);
 
-    // mergeRuns
 
+        // keeping in mind the rounds themselves were not ordered yet sample4 is designed to be in ordered
+        List<File> runs = (List<File>) splitCSV.invoke(mergeSort, resourceDirectory + "/sample4.csv");
 
-    // mergeMinHeap
+        File merged = (File) mergeRunsOneThread.invoke(mergeSort,runs,false);
+
+        BufferedReader reader = new BufferedReader(new FileReader(merged));
+
+        String line = reader.readLine(); // header
+        assertEquals(header, line);
+
+        line = reader.readLine(); // row 1
+        assertEquals("1,row1col2,row1col3", line);
+        line = reader.readLine(); // row 2
+        assertEquals("2,row2col2,row2col3", line);
+        line = reader.readLine(); // row 3
+        assertEquals("3,row3col2,row3col3", line);
+        line = reader.readLine(); // row 4
+        assertEquals("4,row5col2,row5col3", line);
+        line = reader.readLine(); // row 5
+        assertEquals("5,row6col2,row6col3", line);
+        line = reader.readLine(); // row 5
+        assertEquals("7,row4col2,row4col3", line);
+
+        reader.close();
+        merged.delete();
+
+    }
 
 
     @Test
-    public void fullExternalMergeSort(){
+    public void testMergeRunsParallel() throws NoSuchMethodException, SecurityException, IllegalAccessException, InvocationTargetException, IOException{
 
-        // sortCSV() function
-        assertTrue( true );
+        MergeSort mergeSort = new MergeSort(2, 3, 0, "sample5.csv",resourceDirectory.toString());
+
+        String header = "header1,header2,header3";
+
+        // methods:
+        Method splitCSV = MergeSort.class.getDeclaredMethod("splitCSV", String.class);
+        splitCSV.setAccessible(true);
+        Method mergeRunsParallel = MergeSort.class.getDeclaredMethod("mergeRunsParallel", List.class);
+        mergeRunsParallel.setAccessible(true);
+
+
+        // keeping in mind the rounds themselves were not ordered yet sample4 is designed to be in ordered
+        List<File> runs = (List<File>) splitCSV.invoke(mergeSort, resourceDirectory + "/sample5.csv");
+
+        mergeRunsParallel.invoke(mergeSort,runs);
+        BufferedReader reader = new BufferedReader(new FileReader(resourceDirectory + "/sorted_sample5.csv"));
+
+        String line = reader.readLine(); // header
+        assertEquals(header, line);
+
+        line = reader.readLine(); // row 1
+        assertEquals("1,row1col2,row1col3", line);
+        line = reader.readLine(); // row 2
+        assertEquals("2,row5col2,row5col3", line);
+        line = reader.readLine(); // row 3
+        assertEquals("3,row3col2,row3col3", line);
+        line = reader.readLine(); // row 4
+        assertEquals("4,row9col2,row9col3", line);
+        line = reader.readLine(); // row 5
+        assertEquals("5,row2col2,row2col3", line);
+        line = reader.readLine(); // row 6
+        assertEquals("6,row4col2,row4col3", line);
+        line = reader.readLine(); // row 7
+        assertEquals("7,row6col2,row6col3", line);
+        line = reader.readLine(); // row 8
+        assertEquals("8,row10col2,row10col3", line);
+        line = reader.readLine(); // row 9
+        assertEquals("9,row7col2,row7col3", line);
+        line = reader.readLine(); // row 10
+        assertEquals("10,row8col2,row8col3", line);
+
+        
+        reader.close();
+        try {
+            Files.deleteIfExists( Paths.get(resourceDirectory + "/sorted_sample5.csv"));
+        }
+        catch(NoSuchFileException e) {
+            System.out.println(
+                "No such file/directory exists");
+        }
+    }
+
+
+
+    @Test
+    public void testfullExternalMergeSort() throws IOException{ //sortCSV function
+
+        MergeSort mergeSort = new MergeSort(2, 3, 0, "sample6.csv",resourceDirectory.toString());
+        String header = "header1,header2,header3";
+
+        mergeSort.sortCSV();
+
+        BufferedReader reader = new BufferedReader(new FileReader(resourceDirectory + "/sorted_sample6.csv"));
+
+        String line = reader.readLine(); // header
+        assertEquals(header, line);
+
+        line = reader.readLine(); // row 1
+        assertEquals("1,row2col2,row2col3", line);
+        line = reader.readLine(); // row 2
+        assertEquals("2,row6col2,row6col3", line);
+        line = reader.readLine(); // row 3
+        assertEquals("3,row3col2,row3col3", line);
+        line = reader.readLine(); // row 4
+        assertEquals("4,row9col2,row9col3", line);
+        line = reader.readLine(); // row 5
+        assertEquals("5,row1col2,row1col3", line);
+        line = reader.readLine(); // row 6
+        assertEquals("6,row4col2,row4col3", line);
+        line = reader.readLine(); // row 7
+        assertEquals("7,row5col2,row5col3", line);
+        line = reader.readLine(); // row 8
+        assertEquals("8,row10col2,row10col3", line);
+        line = reader.readLine(); // row 9
+        assertEquals("9,row7col2,row7col3", line);
+        line = reader.readLine(); // row 10
+        assertEquals("10,row8col2,row8col3", line);
+
+        
+        reader.close();
+        try {
+            Files.deleteIfExists( Paths.get(resourceDirectory + "/sorted_sample6.csv"));
+        }
+        catch(NoSuchFileException e) {
+            System.out.println(
+                "No such file/directory exists");
+        }
     }
 
 }

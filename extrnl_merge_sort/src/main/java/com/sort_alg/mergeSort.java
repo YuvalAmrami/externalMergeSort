@@ -33,8 +33,8 @@ public class MergeSort {
             this.pool = Executors.newFixedThreadPool(1);
         }
         this.keyIndex = keyIndexInput;
-        this.FileName = dir + "/" + FileNameInput;
-        this.FileNameOut = dir + "/" + "sorted_" + FileNameInput;
+        this.FileName = dir + "\\" + FileNameInput;
+        this.FileNameOut = dir + "\\" + "sorted_" + FileNameInput;
         this.currDir = dir;
         if (isTest.length > 0) {
             this.isTest = isTest[0];
@@ -84,6 +84,9 @@ public class MergeSort {
         List<Future<File>> futures = new ArrayList<>();
         try {
             for (final File file : runs) {
+                if (!isTest) {
+                    file.deleteOnExit();
+                }
                 final Callable<File> sortTask = new Callable<File>() {
                     public File call() throws Exception {
                         final List<CSVEntry> run = readRun(file);
@@ -100,17 +103,20 @@ public class MergeSort {
 
             List<File> sortedRuns = new ArrayList<>();
             for (Future<File> future : futures) {
-                sortedRuns.add(future.get());
+                while(!future.isDone()) {
+                    System.out.println("still sorting...");
+                    Thread.sleep(300);
+                }
+                sortedRuns.add(future.get(100, TimeUnit.MILLISECONDS));
             }
 
             mergeRunsParallel(sortedRuns);
 
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
             e.printStackTrace();
         }
 
         finally {
-            // cleanup(runs);
             pool.shutdown();
         }
     }
@@ -118,7 +124,7 @@ public class MergeSort {
     // creating a list of csv files with at most MAX_MEMORY lines
     private List<File> splitCSV(String inputFile) throws IOException {
 
-        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+        final BufferedReader reader = new BufferedReader(new FileReader(inputFile));
         this.header = reader.readLine();
 
         List<File> runs = new ArrayList<>();
@@ -155,6 +161,7 @@ public class MergeSort {
                 int key = Integer.parseInt(parts[keyIndex]);
                 chunk.add(new CSVEntry(key, line, null));
             }
+            reader.close();
         }
         return chunk;
     }
@@ -167,7 +174,7 @@ public class MergeSort {
         File file = File.createTempFile("run_" + uid, ".csv", tempFileFolder);
 
 		try {
-			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+			final BufferedWriter writer = new BufferedWriter(new FileWriter(file));
             if(header!=null){
                 writer.write(header);
                 writer.newLine();
@@ -213,16 +220,17 @@ public class MergeSort {
                 List<File> mergedRuns = new ArrayList<>();
 
                 for (Future<File> future : mergeFutures) {
-                    mergedRuns.add(future.get());
+                    while(!future.isDone()) {
+                        System.out.println("still Merging...");
+                        Thread.sleep(300);
+                    }
+                    mergedRuns.add(future.get(100, TimeUnit.MILLISECONDS));
                 }
 
                 mergeRunsParallel(mergedRuns);
 
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            } catch (InterruptedException ie) {
-                System.err.println("Thread interrupted. "+ ie);
-                throw new InterruptedException(ie.getMessage());
+            } catch (IOException| InterruptedException | ExecutionException | TimeoutException e) {
+                e.printStackTrace();
             }
         } else {
             mergeRunsOneThread(runs,true);
@@ -236,7 +244,10 @@ public class MergeSort {
 
         try {
             for (File run : runs) {
-                BufferedReader reader = new BufferedReader(new FileReader(run));
+                if (!isTest) {
+                    run.deleteOnExit();
+                }
+                final BufferedReader reader = new BufferedReader(new FileReader(run));
                 String line = reader.readLine();
                 if (header!=null && line.equals(header)) {
                     line = reader.readLine();
@@ -245,10 +256,11 @@ public class MergeSort {
                     String[] parts = line.split(",");
                     int key = Integer.parseInt(parts[keyIndex]);
                     minHeap.add(new CSVEntry(key, line, reader));
-                }
+                }else{
+                    reader.close();
+                };
             }
             File merged = mergeMinHeap(minHeap,isLast);
-            cleanup(runs);
             return merged;
 
         } catch (IOException e) {
@@ -262,12 +274,15 @@ public class MergeSort {
     private File mergeMinHeap(PriorityQueue<CSVEntry> minHeap, Boolean isFinelFile) throws IOException {
         File fileOut;
         if (isFinelFile == true) {
-            fileOut = File.createTempFile(FileNameOut, ".csv");
+            fileOut = new File(FileNameOut);
+            if (fileOut.exists()){
+                fileOut.delete();
+            }
         } else {
             String uid = getUid();
             fileOut = File.createTempFile("run_" + uid, ".csv", tempFileFolder);
         }
-        BufferedWriter writer = new BufferedWriter(new FileWriter(fileOut));
+        final BufferedWriter writer = new BufferedWriter(new FileWriter(fileOut));
         if (header != null){
             writer.write(header);
             writer.newLine();
@@ -290,14 +305,6 @@ public class MergeSort {
         }
         writer.close();
         return fileOut;
-    }
-
-    private void cleanup(List<File> runs) {
-        if (!isTest) {
-            for (File file : runs) {
-                file.delete();
-            }
-        }
     }
 
     private String getUid() {
