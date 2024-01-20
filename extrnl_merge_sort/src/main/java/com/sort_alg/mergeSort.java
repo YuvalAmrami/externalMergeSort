@@ -34,35 +34,8 @@ public class MergeSort {
         }
         this.keyIndex = keyIndexInput;
         this.FileName = dir + "\\" + FileNameInput;
-        this.FileNameOut = dir + "\\" + "sorted_" + FileNameInput;
+        this.FileNameOut = dir + "\\" + FileNameInput.substring(0,(FileNameInput.length()-4)) + "_sorted.csv" ;
         this.currDir = dir;
-        if (isTest.length > 0) {
-            this.isTest = isTest[0];
-        }
-
-        String tempFileFolderName = currDir + "/TempFilesDir";
-        tempFileFolder = new File(tempFileFolderName);
-        if (!tempFileFolder.exists()) {
-            if (!tempFileFolder.mkdirs()) {
-                System.err.println("Error creating directories for " + (tempFileFolder).toString());
-            }
-        }
-        Uid = 1;
-    }
-
-    public MergeSort(int maxMem, int poolSize, int keyIndexInput, String FileNameInput, Boolean... isTest) {
-        
-        this.MAX_MEMORY = maxMem;
-        if (Runtime.getRuntime().availableProcessors() >= poolSize) {
-            this.pool = Executors.newFixedThreadPool(poolSize);
-        } else {
-            System.err.println(
-                    "the pool size is bigger than the number of available runtime processors so the number of threads will be 1");
-            this.pool = Executors.newFixedThreadPool(1);
-        }
-        this.keyIndex = keyIndexInput;
-        this.FileName = "/" + FileNameInput;
-        this.FileNameOut = "sorted_" + FileNameInput;
         if (isTest.length > 0) {
             this.isTest = isTest[0];
         }

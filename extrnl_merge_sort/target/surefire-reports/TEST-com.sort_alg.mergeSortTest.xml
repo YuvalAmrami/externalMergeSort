@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.sort_alg.AppTest" time="0.054" tests="1" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.sort_alg.mergeSortTest" time="1.809" tests="8" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="19"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -15,7 +15,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Java\jdk-19\bin"/>
-    <property name="sun.java.command" value="C:\Users\Yuval\AppData\Local\Temp\surefire10932046678140967046\surefirebooter-20240120224835107_3.jar C:\Users\Yuval\AppData\Local\Temp\surefire10932046678140967046 2024-01-20T22-48-34_853-jvmRun1 surefire-20240120224835107_1tmp surefire_0-20240120224835107_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\Yuval\AppData\Local\Temp\surefire11946212026036486748\surefirebooter-20240120232812061_3.jar C:\Users\Yuval\AppData\Local\Temp\surefire11946212026036486748 2024-01-20T23-28-11_850-jvmRun1 surefire-20240120232812061_1tmp surefire_0-20240120232812061_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="c:\Users\Yuval\Desktop\eng_path\externalMergeSort\extrnl_merge_sort\target\test-classes;c:\Users\Yuval\Desktop\eng_path\externalMergeSort\extrnl_merge_sort\target\classes;C:\Users\Yuval\.m2\repository\junit\junit\4.11\junit-4.11.jar;C:\Users\Yuval\.m2\repository\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -30,7 +30,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\Yuval\AppData\Local\Temp\surefire10932046678140967046\surefirebooter-20240120224835107_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\Yuval\AppData\Local\Temp\surefire11946212026036486748\surefirebooter-20240120232812061_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="19.0.2+7-44"/>
@@ -58,5 +58,21 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="63.0"/>
   </properties>
-  <testcase name="shouldAnswerWithTrue" classname="com.sort_alg.AppTest" time="0.004"/>
+  <testcase name="testWriteRun" classname="com.sort_alg.mergeSortTest" time="0.105"/>
+  <testcase name="testMergeRunsParallel" classname="com.sort_alg.mergeSortTest" time="0.624">
+    <system-out><![CDATA[still Merging...
+still Merging...
+]]></system-out>
+  </testcase>
+  <testcase name="testSplitCSV1" classname="com.sort_alg.mergeSortTest" time="0.008"/>
+  <testcase name="testSplitCSV2" classname="com.sort_alg.mergeSortTest" time="0.021"/>
+  <testcase name="testReadRunAndSort" classname="com.sort_alg.mergeSortTest" time="0.011"/>
+  <testcase name="testMergeRunsOneThread" classname="com.sort_alg.mergeSortTest" time="0.012"/>
+  <testcase name="testMergeMinHeap" classname="com.sort_alg.mergeSortTest" time="0.011"/>
+  <testcase name="testfullExternalMergeSort" classname="com.sort_alg.mergeSortTest" time="0.945">
+    <system-out><![CDATA[still sorting...
+still Merging...
+still Merging...
+]]></system-out>
+  </testcase>
 </testsuite>

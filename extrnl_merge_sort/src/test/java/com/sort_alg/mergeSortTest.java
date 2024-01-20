@@ -324,7 +324,7 @@ public class mergeSortTest {
         List<File> runs = (List<File>) splitCSV.invoke(mergeSort, resourceDirectory + "/sample5.csv");
 
         mergeRunsParallel.invoke(mergeSort,runs);
-        BufferedReader reader = new BufferedReader(new FileReader(resourceDirectory + "/sorted_sample5.csv"));
+        BufferedReader reader = new BufferedReader(new FileReader(resourceDirectory + "/sample5_sorted.csv"));
 
         String line = reader.readLine(); // header
         assertEquals(header, line);
@@ -353,7 +353,7 @@ public class mergeSortTest {
         
         reader.close();
         try {
-            Files.deleteIfExists( Paths.get(resourceDirectory + "/sorted_sample5.csv"));
+            Files.deleteIfExists( Paths.get(resourceDirectory + "/sample5_sorted.csv"));
         }
         catch(NoSuchFileException e) {
             System.out.println(
@@ -371,7 +371,7 @@ public class mergeSortTest {
 
         mergeSort.sortCSV();
 
-        BufferedReader reader = new BufferedReader(new FileReader(resourceDirectory + "/sorted_sample6.csv"));
+        BufferedReader reader = new BufferedReader(new FileReader(resourceDirectory + "/sample6_sorted.csv"));
 
         String line = reader.readLine(); // header
         assertEquals(header, line);
@@ -400,7 +400,7 @@ public class mergeSortTest {
         
         reader.close();
         try {
-            Files.deleteIfExists( Paths.get(resourceDirectory + "/sorted_sample6.csv"));
+            Files.deleteIfExists( Paths.get(resourceDirectory + "/sample6_sorted.csv"));
         }
         catch(NoSuchFileException e) {
             System.out.println(
